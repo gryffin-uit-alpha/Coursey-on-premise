@@ -93,3 +93,4 @@ Thumbs.db
 # ==============================================================================
 *.log
 docker-compose.override.yml
+.scannerwork
