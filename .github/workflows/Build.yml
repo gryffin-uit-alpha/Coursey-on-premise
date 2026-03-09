@@ -73,7 +73,8 @@ jobs:
                   password: ${{ secrets.HARBOR_PASSWORD }}
             - uses: docker/build-push-action@v5
               with:
-                  context: ./back-end/mysql
+                  context: ./back-end
+                  file: ./back-end/mysql/Dockerfile
                   push: true
                   tags: |
                       harbor.gryffin-uit.site/coursey/mysql:${{ github.sha }}
@@ -92,7 +93,8 @@ jobs:
                   password: ${{ secrets.HARBOR_PASSWORD }}
             - uses: docker/build-push-action@v5
               with:
-                  context: ./back-end/nginx
+                  context: ./back-end
+                  file: ./back-end/nginx/Dockerfile
                   push: true
                   tags: |
                       harbor.gryffin-uit.site/coursey/nginx:${{ github.sha }}
@@ -111,7 +113,8 @@ jobs:
                   password: ${{ secrets.HARBOR_PASSWORD }}
             - uses: docker/build-push-action@v5
               with:
-                  context: ./back-end/php
+                  context: ./back-end
+                  file: ./back-end/php/Dockerfile
                   push: true
                   tags: |
                       harbor.gryffin-uit.site/coursey/php:${{ github.sha }}
@@ -130,7 +133,8 @@ jobs:
                   password: ${{ secrets.HARBOR_PASSWORD }}
             - uses: docker/build-push-action@v5
               with:
-                  context: ./back-end/python
+                  context: ./back-end
+                  file: ./back-end/python/Dockerfile
                   push: true
                   tags: |
                       harbor.gryffin-uit.site/coursey/python:${{ github.sha }}

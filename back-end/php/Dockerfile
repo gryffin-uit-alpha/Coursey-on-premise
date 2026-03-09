@@ -27,7 +27,7 @@ COPY app /app
 # Note: PHP dotenv loads from /app/.env directory (legacy structure)
 RUN mkdir -p /app/.env
 RUN docker-php-ext-install mysqli
-COPY .env /app/.env/.env
+COPY .env.example /app/.env/.env
 
 WORKDIR /var/www/html
 
