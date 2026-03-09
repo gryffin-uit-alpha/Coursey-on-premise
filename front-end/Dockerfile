@@ -1,28 +1,15 @@
-# Build stage
-FROM node:18-alpine AS builder
-
+FROM node:20 AS builder
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
-
-# Copy source code
 COPY . .
 
-# Build the application
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 RUN npm run build
 
-# Production stage
 FROM nginx:alpine
-
-# Copy built app from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
-
-# Expose port
 EXPOSE 80
-
-# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

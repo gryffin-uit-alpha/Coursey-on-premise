@@ -1,26 +1,157 @@
-name: Build
+name: Coursey CI/CD Pipeline
 
 on:
     push:
         branches:
             - main
+            - master
+    workflow_dispatch:
+        inputs:
+            force_build_all:
+                description: "Force build all services"
+                required: true
+                type: boolean
+                default: false
 
 jobs:
-    build:
-        name: Build and analyze
+    sonarqube-analysis:
+        name: SonarQube Scan & Quality Gate
         runs-on: ubuntu-latest
-
         steps:
             - uses: actions/checkout@v4
               with:
-                  fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
-            - uses: SonarSource/sonarqube-scan-action@v6
+                  fetch-depth: 0
+
+            - name: Quét Code
+              uses: SonarSource/sonarqube-scan-action@v6
               env:
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
                   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-            # If you wish to fail your job when the Quality Gate is red, uncomment the
-            # following lines. This would typically be used to fail a deployment.
-            # - uses: SonarSource/sonarqube-quality-gate-action@v1
+
+            # - name: Kiểm tra Quality Gate
+            #   uses: SonarSource/sonarqube-quality-gate-action@v1
             #   timeout-minutes: 5
             #   env:
-            #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+            #       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    detect-changes:
+        needs: sonarqube-analysis # Run after SonarQube Analyze
+        runs-on: ubuntu-latest
+        outputs:
+            mysql: ${{ steps.filter.outputs.mysql }}
+            nginx: ${{ steps.filter.outputs.nginx }}
+            php: ${{ steps.filter.outputs.php }}
+            python: ${{ steps.filter.outputs.python }}
+            frontend: ${{ steps.filter.outputs.frontend }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dorny/paths-filter@v3
+              id: filter
+              with:
+                  filters: |
+                      mysql:
+                        - 'back-end/mysql/**'
+                      nginx:
+                        - 'back-end/nginx/**'
+                      php:
+                        - 'back-end/php/**'
+                      python:
+                        - 'back-end/python/**'
+                      frontend:
+                        - 'front-end/**'
+
+    build-mysql:
+        needs: detect-changes # Run after detect-changes
+        if: ${{ needs.detect-changes.outputs.mysql == 'true' || inputs.force_build_all == true }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker/login-action@v3
+              with:
+                  registry: harbor.gryffin-uit.site
+                  username: ${{ secrets.HARBOR_USERNAME }}
+                  password: ${{ secrets.HARBOR_PASSWORD }}
+            - uses: docker/build-push-action@v5
+              with:
+                  context: ./back-end/mysql
+                  push: true
+                  tags: |
+                      harbor.gryffin-uit.site/coursey/mysql:${{ github.sha }}
+                      harbor.gryffin-uit.site/coursey/mysql:latest
+
+    build-nginx:
+        needs: detect-changes
+        if: ${{ needs.detect-changes.outputs.nginx == 'true' || inputs.force_build_all == true }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker/login-action@v3
+              with:
+                  registry: harbor.gryffin-uit.site
+                  username: ${{ secrets.HARBOR_USERNAME }}
+                  password: ${{ secrets.HARBOR_PASSWORD }}
+            - uses: docker/build-push-action@v5
+              with:
+                  context: ./back-end/nginx
+                  push: true
+                  tags: |
+                      harbor.gryffin-uit.site/coursey/nginx:${{ github.sha }}
+                      harbor.gryffin-uit.site/coursey/nginx:latest
+
+    build-php:
+        needs: detect-changes
+        if: ${{ needs.detect-changes.outputs.php == 'true' || inputs.force_build_all == true }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker/login-action@v3
+              with:
+                  registry: harbor.gryffin-uit.site
+                  username: ${{ secrets.HARBOR_USERNAME }}
+                  password: ${{ secrets.HARBOR_PASSWORD }}
+            - uses: docker/build-push-action@v5
+              with:
+                  context: ./back-end/php
+                  push: true
+                  tags: |
+                      harbor.gryffin-uit.site/coursey/php:${{ github.sha }}
+                      harbor.gryffin-uit.site/coursey/php:latest
+
+    build-python:
+        needs: detect-changes
+        if: ${{ needs.detect-changes.outputs.python == 'true' || inputs.force_build_all == true }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker/login-action@v3
+              with:
+                  registry: harbor.gryffin-uit.site
+                  username: ${{ secrets.HARBOR_USERNAME }}
+                  password: ${{ secrets.HARBOR_PASSWORD }}
+            - uses: docker/build-push-action@v5
+              with:
+                  context: ./back-end/python
+                  push: true
+                  tags: |
+                      harbor.gryffin-uit.site/coursey/python:${{ github.sha }}
+                      harbor.gryffin-uit.site/coursey/python:latest
+
+    build-frontend:
+        needs: detect-changes
+        if: ${{ needs.detect-changes.outputs.frontend == 'true' || inputs.force_build_all == true }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: docker/login-action@v3
+              with:
+                  registry: harbor.gryffin-uit.site
+                  username: ${{ secrets.HARBOR_USERNAME }}
+                  password: ${{ secrets.HARBOR_PASSWORD }}
+            - uses: docker/build-push-action@v5
+              with:
+                  context: ./front-end
+                  push: true
+                  build-args: REACT_APP_API_URL=${{ vars.REACT_APP_API_URL }}
+                  tags: |
+                      harbor.gryffin-uit.site/coursey/frontend:${{ github.sha }}
+                      harbor.gryffin-uit.site/coursey/frontend:latest
