@@ -46,19 +46,7 @@ spec:
           
     spec:
       serviceAccountName: coursey-backend-sa
-      initContainers:
-      - name: wait-for-vault
-        image: busybox:1.28
-        command:
-        - sh
-        - -c
-        - |
-          echo "Waiting for vault secrets..."
-          while [ ! -f /vault/secrets/root-pass ]; do
-            echo "Waiting..."
-            sleep 2;
-          done;
-          echo "Secrets are ready! Starting MySQL..."
+
       containers:
       - name: mysql
         image: mysql:8.0
