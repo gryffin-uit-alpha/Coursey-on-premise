@@ -9,11 +9,27 @@ spec:
   selector:
     matchLabels:
       app: coursey-python
+      
   template:
     metadata:
       labels:
         app: coursey-python
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "coursey-backend-role"
+        vault.hashicorp.com/agent-inject-secret-db-creds: "secret/data/coursey/database"
+        vault.hashicorp.com/agent-inject-template-db-creds: |
+          {{-`{{-`}} with secret "secret/data/coursey/database" {{`-}}`}}
+          export MYSQL_HOST="{{`{{ .Data.data.MYSQL_HOST }}`}}"
+          export MYSQL_USER="{{`{{ .Data.data.MYSQL_USER }}`}}"
+          export MYSQL_PASSWORD="{{`{{ .Data.data.MYSQL_PASSWORD }}`}}"
+          export MYSQL_DATABASE="{{`{{ .Data.data.MYSQL_DATABASE }}`}}"
+          export MAIL_USERNAME="{{`{{ .Data.data.MAIL_USERNAME }}`}}"
+          export PASS_APP="{{`{{ .Data.data.PASS_APP }}`}}"
+          export HOST_NAME="{{`{{ .Data.data.HOST_NAME }}`}}"
+          {{-`{{-`}} end {{`-}}`}}
     spec:
+      serviceAccountName: coursey-backend-sa
       containers:
       - name: python-app
         image: "{{ .Values.python.image.repository }}:{{ .Values.python.image.tag }}"

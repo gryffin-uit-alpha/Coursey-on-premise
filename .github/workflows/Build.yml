@@ -49,8 +49,6 @@ jobs:
               id: filter
               with:
                   filters: |
-                      mysql:
-                        - 'back-end/mysql/**'
                       nginx:
                         - 'back-end/nginx/**'
                       php:
@@ -59,26 +57,6 @@ jobs:
                         - 'back-end/python/**'
                       frontend:
                         - 'front-end/**'
-
-    build-mysql:
-        needs: detect-changes # Run after detect-changes
-        if: ${{ needs.detect-changes.outputs.mysql == 'true' || inputs.force_build_all == true }}
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
-            - uses: docker/login-action@v3
-              with:
-                  registry: harbor.gryffin-uit.site
-                  username: ${{ secrets.HARBOR_USERNAME }}
-                  password: ${{ secrets.HARBOR_PASSWORD }}
-            - uses: docker/build-push-action@v5
-              with:
-                  context: ./back-end
-                  file: ./back-end/mysql/Dockerfile
-                  push: true
-                  tags: |
-                      harbor.gryffin-uit.site/coursey/mysql:${{ github.sha }}
-                      harbor.gryffin-uit.site/coursey/mysql:latest
 
     build-nginx:
         needs: detect-changes
