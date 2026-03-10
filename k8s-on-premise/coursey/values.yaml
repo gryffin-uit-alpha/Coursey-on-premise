@@ -51,7 +51,7 @@ nginx:
       cpu: "500m"
 
 appConfig:
-  apiBaseUrl: "https://api.hnblong.site" # e.g., https://api.example.com
+  apiBaseUrl: "https://api.hnblong.site"
 
 frontend:
   replicaCount: 1
