@@ -30,23 +30,22 @@ spec:
         
         vault.hashicorp.com/agent-inject-secret-root-pass: "secret/data/coursey/database"
         vault.hashicorp.com/agent-inject-template-root-pass: |
-          {{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_ROOT_PASSWORD }}{{- end -}}
+          {{`{{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_ROOT_PASSWORD }}{{- end -}}`}}
           
         vault.hashicorp.com/agent-inject-secret-db-name: "secret/data/coursey/database"
         vault.hashicorp.com/agent-inject-template-db-name: |
-          {{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_DATABASE }}{{- end -}}
+          {{`{{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_DATABASE }}{{- end -}}`}}
           
         vault.hashicorp.com/agent-inject-secret-db-user: "secret/data/coursey/database"
         vault.hashicorp.com/agent-inject-template-db-user: |
-          {{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_USER }}{{- end -}}
+          {{`{{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_USER }}{{- end -}}`}}
           
         vault.hashicorp.com/agent-inject-secret-db-pass: "secret/data/coursey/database"
         vault.hashicorp.com/agent-inject-template-db-pass: |
-          {{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_PASSWORD }}{{- end -}}
+          {{`{{- with secret "secret/data/coursey/database" -}}{{ .Data.data.MYSQL_PASSWORD }}{{- end -}}`}}
           
     spec:
       serviceAccountName: coursey-backend-sa
-      # Thêm một InitContainer để chờ thư mục Vault
       initContainers:
       - name: wait-for-vault
         image: busybox:1.28
@@ -55,7 +54,6 @@ spec:
         - -c
         - |
           echo "Waiting for vault secrets..."
-          # Lặp vô hạn cho tới khi file secret xuất hiện
           while [ ! -f /vault/secrets/root-pass ]; do
             echo "Waiting..."
             sleep 2;
