@@ -1,19 +1,19 @@
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: coursey-php
+  name: coursey-python
   labels:
-    app: coursey-php
+    app: coursey-python
 spec:
-  replicas: {{ .Values.php.replicaCount }}
+  replicas: {{ .Values.python.replicaCount }}
   selector:
     matchLabels:
-      app: coursey-php
+      app: coursey-python
+      
   template:
     metadata:
       labels:
-        app: coursey-php
+        app: coursey-python
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/role: "coursey-backend-role"
@@ -29,19 +29,25 @@ spec:
           export HOST_NAME="{{`{{ .Data.data.HOST_NAME }}`}}"
           {{`{{- end -}}`}}
     spec:
+      imagePullSecrets:
+      - name: harbor-pull-secret  
       serviceAccountName: coursey-backend-sa
       containers:
-      - name: php-fpm
-        image: "{{ .Values.php.image.repository }}:{{ .Values.php.image.tag }}"  
-        command: ["/bin/sh", "-c"]
-        args: ["source /vault/secrets/db-creds && php-fpm"]
+      - name: python-app
+        image: "{{ .Values.python.image.repository }}:{{ .Values.python.image.tag }}"
+        imagePullPolicy: Always 
         ports:
-        - containerPort: {{ .Values.php.service.port }}
-          name: php-fpm
+        - containerPort: {{ .Values.python.service.port }}
+          name: python-http
         resources:
-          {{- toYaml .Values.php.resources | nindent 10 }}
+          {{- toYaml .Values.python.resources | nindent 10 }}
         readinessProbe:
           tcpSocket:
-            port: {{ .Values.php.service.port }}
+            port: {{ .Values.python.service.port }}
           initialDelaySeconds: 10
           periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.python.service.port }}
+          initialDelaySeconds: 20
+          periodSeconds: 10

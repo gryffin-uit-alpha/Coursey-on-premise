@@ -53,6 +53,22 @@ nginx:
 appConfig:
   apiBaseUrl: "https://api.hnblong.site" # e.g., https://api.example.com
 
+frontend:
+  replicaCount: 1
+  image:
+    repository: harbor.gryffin-uit.site/coursey/frontend
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "500m"
+
 ingress:
   enabled: true
   className: "nginx"
@@ -67,3 +83,8 @@ ingress:
       host: "admin.hnblong.site" # e.g., admin.example.com
       serviceName: "nginx-service"
       port: 8082
+
+    - name: "frontend"
+      host: "hnblong.site"
+      serviceName: "frontend-service"
+      port: 80
